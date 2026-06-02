@@ -1,8 +1,7 @@
 import duckdb
 from pathlib import Path
 
-csv_dir = Path(r"C:\Users\francisco.vieira\OneDrive - EBSERH\Dropbox\#Jobs\Projeto MEMP\rf_cnpj_csv\2026-01")
-db_path = Path(r"C:\Users\francisco.vieira\OneDrive - EBSERH\Dropbox\#Jobs\Projeto MEMP\cnpj_2026_01.duckdb")
+from project_paths import DB_PATH, get_rfb_files
 
 def detect_encoding(path: str) -> str:
     """
@@ -177,9 +176,9 @@ def create_estabelecimentos_incremental(con, est_files):
     print("✅ estabelecimentos OK (incremental)")
 
 def main():
-    emp_files = sorted([str(p) for p in csv_dir.glob("*EMPRECSV*")])
-    est_files = sorted([str(p) for p in csv_dir.glob("*ESTABELE*")])
-    simples_files = sorted([p for p in csv_dir.glob("*SIMPLES*")])
+    emp_files = get_rfb_files("empresas")
+    est_files = get_rfb_files("estabelecimentos")
+    simples_files = get_rfb_files("simples")
 
     print("EMPRESAS:", len(emp_files), "ex:", emp_files[0] if emp_files else None)
     print("ESTABELECIMENTOS:", len(est_files), "ex:", est_files[0] if est_files else None)
@@ -188,7 +187,7 @@ def main():
     if not emp_files or not est_files or not simples_files:
         raise RuntimeError("Faltam arquivos (empresas/estabelecimentos/simples).")
 
-    con = duckdb.connect(str(db_path))
+    con = duckdb.connect(str(DB_PATH))
     con.execute("PRAGMA threads=8;")
 
     create_empresas(con, emp_files)
@@ -201,7 +200,7 @@ def main():
     print("COUNT simples:", con.execute("SELECT COUNT(*) FROM simples").fetchone()[0])
 
     con.close()
-    print("✅ DuckDB pronto em:", db_path)
+    print("✅ DuckDB pronto em:", DB_PATH)
 
 if __name__ == "__main__":
     main()

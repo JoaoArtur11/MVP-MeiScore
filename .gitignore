@@ -1,0 +1,25 @@
+# Dados brutos grandes baixados localmente
+dados cnae/
+rf_cnpj_csv/
+pncp_contratos_raw.csv
+pncp_contratos_raw_backup.csv
+mvp_score/pncp_contratos_raw.csv
+
+# Arquivos temporarios de download/extracao
+*.part
+*.tmp
+
+# Pacotes compactados de dados
+*.zip
+*.rar
+
+# Caches locais
+__pycache__/
+*.py[cod]
+
+# Residuos de execucao local do PNCP
+mvp_score/mvp_score/
+mvp_score/resultados/pncp_full_run*.log
+mvp_score/resultados/pncp_download_state.json
+mvp_score/resultados/pncp_download_validation*.json
+mvp_score/resultados/failed_pages*.csv

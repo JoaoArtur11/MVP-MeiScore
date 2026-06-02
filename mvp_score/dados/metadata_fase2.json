@@ -1,0 +1,14 @@
+{
+  "feature_cols": [
+    "share_cnae",
+    "share_uf",
+    "log_valor_medio",
+    "log_valor_total",
+    "log_count",
+    "diversidade_orgaos",
+    "densidade_mei"
+  ],
+  "target_col": "target",
+  "target_rule": "target=1 se count_contratos >= percentil_75(count_contratos), senao 0",
+  "target_threshold_p75_count_contratos": 5.0
+}

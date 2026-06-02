@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from tqdm import tqdm
+from project_paths import DADOS_CNAE_DIR
 
 BASE_DIR_URL = "https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/"
 
@@ -84,7 +85,7 @@ def download_file(url: str, out_path: str, max_retries: int = 5):
 
     raise RuntimeError(f"Falhou após {max_retries} tentativas: {url}")
 
-def main(out_dir="rf_cnpj_zips", only_needed=True):
+def main(out_dir=str(DADOS_CNAE_DIR), only_needed=True):
     folder = latest_month_folder(BASE_DIR_URL)
     month_url = urljoin(BASE_DIR_URL, folder)
     print("Pasta mais recente:", month_url)

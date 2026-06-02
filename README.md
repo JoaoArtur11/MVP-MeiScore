@@ -1,290 +1,255 @@
-# 📊 Panorama de Participação do MEI nas Compras Públicas Federais (PNCP)
+# Score de Oportunidade MEI em Compras Publicas Federais
 
-Este projeto constrói um **panorama quantitativo da participação de Microempreendedores Individuais (MEI)** nas compras públicas federais brasileiras, utilizando dados abertos da Receita Federal (CNPJ/Simples) e da API oficial do PNCP (Portal Nacional de Contratações Públicas).
+Este projeto implementa um MVP para estimar um **score de oportunidade por combinacao CNAE x UF** para Microempreendedores Individuais (MEI) em compras publicas federais brasileiras.
 
----
+O pipeline cruza:
 
-## 🎯 Objetivo
+- contratos publicos federais publicados no PNCP;
+- dados cadastrais publicos de CNPJ/MEI da Receita Federal;
+- agregacoes historicas por CNAE, UF, valor contratado, orgaos compradores e MEIs contratados.
 
-Medir:
-
-* Quantos contratos federais foram firmados com MEIs
-* Qual a participação percentual dos MEIs:
-
-  * por **quantidade de contratos**
-  * por **valor financeiro**
-* Perfil geográfico (UF)
-* Perfil econômico (CNAE)
-* Evolução temporal (série diária)
-* Principais órgãos compradores
+O resultado principal e o arquivo `mvp_score/resultados/score_oportunidade.csv`, com score de 0 a 100 para cada combinacao `CNAE x UF`.
 
 ---
 
-## 🗂 Fontes de Dados
+## Objetivo
 
-### 1) Receita Federal – Cadastro CNPJ (dados abertos)
+Validar a hipotese:
 
-Fonte:
-[https://dadosabertos.rfb.gov.br/CNPJ/](https://dadosabertos.rfb.gov.br/CNPJ/)
-
-Usamos os arquivos mensais mais recentes contendo:
-
-* **EMPRESAS** → razão social
-* **ESTABELECIMENTOS** → UF, município, situação, CNAE
-* **SIMPLES** → opção pelo MEI
-
-Esses arquivos vêm **sem cabeçalho** e são massivos (dezenas de milhões de linhas).
+> Um modelo preditivo treinado com variaveis historicas de frequencia de contratacao por CNAE, UF e orgao comprador supera um baseline de frequencia simples na identificacao de combinacoes CNAE x UF com alta probabilidade de contratacao, medido por F1-score e AUC-ROC.
 
 ---
 
-### 2) PNCP – Portal Nacional de Contratações Públicas
+## Fontes De Dados
 
-API oficial (Swagger):
-[https://pncp.gov.br/api/consulta/swagger-ui/index.html#/](https://pncp.gov.br/api/consulta/swagger-ui/index.html#/)
+### 1. PNCP - Contratos Publicos
 
-Endpoint utilizado:
+Fonte oficial:
 
-```
-GET /v1/contratos
+- API de consulta do PNCP: `https://pncp.gov.br/api/consulta/v1/contratos`
+- Swagger: `https://pncp.gov.br/api/consulta/swagger-ui/index.html`
+
+O projeto baixa contratos pela API paginada do PNCP e grava um CSV local chamado:
+
+```text
+pncp_contratos_raw.csv
 ```
 
-Campos-chave:
+Colunas usadas no MVP:
 
-* `dataPublicacaoPncp`
-* `niFornecedor`
-* `tipoPessoa` (PJ / PF)
-* `valorGlobal`
-* `orgaoEntidade`
-* `unidadeOrgao`
+- `niFornecedor`: CNPJ do fornecedor.
+- `tipoPessoa`: identifica pessoa juridica (`PJ`) ou pessoa fisica.
+- `valorGlobal`: valor global do contrato.
+- `dataPublicacaoPncp`: data de publicacao no PNCP.
+- `orgaoEntidade_razaoSocial`: orgao comprador.
 
----
+Como baixar para uma janela fixa:
 
-## 🧠 Lógica Geral do Pipeline
-
-O pipeline foi dividido em **etapas independentes**, para evitar reprocessamentos desnecessários.
-
----
-
-## Etapa 1 — Ingestão da base CNPJ (RFB)
-
-Arquivos:
-
-* `import_empresas.py`
-* `import_estabelecimentos.py`
-* `import_simples.py`
-
-Problemas resolvidos:
-
-* Codificação inconsistente (`utf-8`, `latin-1`)
-* Linhas gigantes
-* Falhas de inferência de tipo
-* Arquivos sem header
-
-Solução:
-
-* Importação com `header=false`
-* Mapeamento por índice
-* Uso de `DuckDB` para suportar volume massivo
-
-Resultado:
-
-Tabelas no DuckDB:
-
-* `empresas`
-* `estabelecimentos`
-* `simples`
-
----
-
-## Etapa 2 — Construção da base de MEI ativo
-
-Script:
-
-* `create_mei_ativo.py`
-
-Lógica:
-
-```
-MEI ativo =
-  empresas
-  ⨝ estabelecimentos
-  ⨝ simples
-  onde:
-    - opção MEI = S
-    - situação cadastral = ativa
+```powershell
+$env:PNCP_DATA_INICIAL='20251127'
+$env:PNCP_DATA_FINAL='20260530'
+$env:PNCP_PAGE_SIZE='500'
+$env:PNCP_SLEEP_SECONDS='0.05'
+$env:PNCP_RETRY_FOREVER='1'
+$env:PNCP_MAX_RETRIES='999999'
+$env:PNCP_PAGE_BATCH='5000'
+$env:PNCP_RESUME='1'
+$env:PNCP_STRICT_RESUME='1'
+$env:PNCP_OUT_CSV='pncp_contratos_raw.csv'
+$env:PNCP_VALIDATION_JSON='mvp_score/resultados/pncp_download_validation.json'
+python mvp_score/gerar_pncp_csv.py
 ```
 
-Resultado:
+Observacoes:
 
-Tabela:
-
-```
-mei_ativo
-```
-
-Com colunas:
-
-* CNPJ (14 dígitos)
-* Razão social
-* UF
-* Município
-* CNAE principal
-* Situação
-* Flag MEI
+- Ajuste `PNCP_DATA_INICIAL` e `PNCP_DATA_FINAL` para a janela desejada.
+- O PNCP pode oscilar e retornar erros 5xx; por isso o script tem retries.
+- O script consulta a primeira pagina para descobrir `totalPaginas` e segue ate o fim da janela.
+- Para janela dinamica dos ultimos dias, remova `PNCP_DATA_INICIAL` e `PNCP_DATA_FINAL` e defina `PNCP_DAYS_BACK`.
+- O CSV precisa ficar na raiz do projeto, pois a fase 1 identifica automaticamente `pncp_contratos_raw.csv`.
 
 ---
 
-## Etapa 3 — Extração dos contratos federais do PNCP
+### 2. Receita Federal - Base Publica CNPJ / MEI
 
-Script:
+Fonte oficial:
 
-* `pncp_mei_federal_pipeline.py`
+- Portal de dados abertos CNPJ: `https://dadosabertos.rfb.gov.br/CNPJ/`
+- Diretorio de arquivos: `https://dadosabertos.rfb.gov.br/CNPJ/dados_abertos_cnpj/`
 
-Lógica:
+O MVP precisa dos seguintes conjuntos:
 
-* Consulta paginada da API `/v1/contratos`
-* Janela: últimos 6 meses
-* Tamanho da página: 500 (máximo permitido)
-* Salvamento incremental em JSONL
+- `Empresas0.zip` a `Empresas9.zip`
+- `Estabelecimentos0.zip` a `Estabelecimentos9.zip`
+- `Simples.zip`
 
-Resultado:
+Arquivos auxiliares como `Cnaes.zip`, `Municipios.zip`, `Naturezas.zip`, `Socios*.zip`, `Paises.zip`, `Motivos.zip` e `Qualificacoes.zip` nao sao necessarios para este MVP.
 
-Arquivo:
+Estrutura esperada no projeto depois de baixar e extrair:
 
+```text
+rf_cnpj_csv/
+  _extracted/
+    2026-05-10/
+      K3241.K03200Y0.D60509.ESTABELE
+      K3241.K03200Y1.D60509.ESTABELE
+      ...
+      K3241.K03200Y9.D60509.ESTABELE
+      K3241.K03200Y1.D60509.EMPRECSV
+      ...
+      K3241.K03200Y9.D60509.EMPRECSV
+      F.K03200$W.SIMPLES.CSV.D60509
 ```
-pncp_contratos_6m.jsonl
+
+Como baixar manualmente:
+
+1. Acesse `https://dadosabertos.rfb.gov.br/CNPJ/dados_abertos_cnpj/`.
+2. Entre no mes mais recente disponivel.
+3. Baixe os arquivos `Empresas*.zip`, `Estabelecimentos*.zip` e `Simples.zip`.
+4. Extraia todos para `rf_cnpj_csv/_extracted/<data-do-snapshot>/`.
+
+Exemplo PowerShell para baixar um snapshot especifico:
+
+```powershell
+$base='https://dadosabertos.rfb.gov.br/CNPJ/dados_abertos_cnpj/2026-05/'
+$out='dados cnae/2026-05'
+New-Item -ItemType Directory -Force -Path $out
+
+0..9 | ForEach-Object {
+  Invoke-WebRequest "${base}Empresas$_.zip" -OutFile "$out/Empresas$_.zip"
+  Invoke-WebRequest "${base}Estabelecimentos$_.zip" -OutFile "$out/Estabelecimentos$_.zip"
+}
+Invoke-WebRequest "${base}Simples.zip" -OutFile "$out/Simples.zip"
 ```
 
----
+Depois extraia os ZIPs:
 
-## Etapa 4 — Importação do JSONL para DuckDB
-
-Script:
-
-* `pncp_join_mei_federal_from_jsonl.py`
-
-Lógica:
-
-1. Carrega JSONL no DuckDB
-2. Filtra contratos federais
-3. Normaliza CNPJ (`niFornecedor`)
-4. Cruza com `mei_ativo`
-5. Gera KPIs
-
-Tabelas criadas:
-
-* `pncp_contratos_raw`
-* `pncp_contratos_federal_6m`
-* `pncp_mei_federal_6m`
-
----
-
-## Etapa 5 — Geração de KPIs
-
-Tabelas finais:
-
-* `kpi_mei_participacao_federal_6m`
-* `kpi_mei_top_uf_federal_6m`
-* `kpi_mei_top_cnae_federal_6m`
-* `kpi_mei_top_orgaos_federal_6m`
-* `kpi_mei_serie_diaria_federal_6m`
-
----
-
-## Etapa 6 — Visualização
-
-Script:
-
-* `plot_kpis_mei_pncp.py`
-
-Gera:
-
-* Gráficos PNG
-* Relatório HTML
-
-Ajustes de usabilidade:
-
-* Gráfico horizontal para rótulos longos
-* Texto explícito: **"em milhões"**
-* Layout para público leigo
-* Sem notação científica ambígua
-
----
-
-## 📁 Estrutura do Projeto
-
+```powershell
+$snapshot='2026-05-10'
+$src='dados cnae/2026-05'
+$dst="rf_cnpj_csv/_extracted/$snapshot"
+New-Item -ItemType Directory -Force -Path $dst
+Get-ChildItem $src -Filter *.zip | ForEach-Object {
+  Expand-Archive -Path $_.FullName -DestinationPath $dst -Force
+}
 ```
-Projeto MEMP/
-│
-├── rf_cnpj_csv/
-│
-├── cnpj_2026_01.duckdb
-│
-├── import_empresas.py
-├── import_estabelecimentos.py
-├── import_simples.py
-├── create_mei_ativo.py
-│
-├── pncp_contratos_6m.jsonl
-├── pncp_mei_federal_pipeline.py
-├── pncp_join_mei_federal_from_jsonl.py
-│
-├── plot_kpis_mei_pncp.py
-│
-└── out_charts/
-    ├── *.png
-    └── relatorio_mei_pncp.html
+
+Observacoes:
+
+- A Receita publica arquivos sem cabecalho.
+- O separador e `;`.
+- Os arquivos sao grandes; reserve dezenas de GB para download e extracao.
+- A fase 1 seleciona automaticamente o snapshot mais recente encontrado em `rf_cnpj_csv/_extracted/`.
+
+---
+
+## Dados Derivados Gerados Pelo MVP
+
+A fase 1 cruza PNCP e Receita Federal por CNPJ normalizado e gera:
+
+```text
+mvp_score/dados/tabela_cnae_uf.csv
+```
+
+Colunas:
+
+- `CNAE`
+- `UF`
+- `count_contratos`
+- `valor_total`
+- `valor_medio`
+- `n_orgaos`
+- `n_meis`
+
+A fase 2 cria:
+
+```text
+mvp_score/dados/features.csv
+```
+
+Features:
+
+- `share_cnae`
+- `share_uf`
+- `log_valor_medio`
+- `log_valor_total`
+- `log_count`
+- `diversidade_orgaos`
+- `densidade_mei`
+
+Target:
+
+- `target = 1` se `count_contratos >= P75(count_contratos)`;
+- `target = 0` caso contrario.
+
+---
+
+## Como Executar O MVP
+
+Depois de obter os dados brutos:
+
+```powershell
+python mvp_score/fase1_preparacao.py
+python mvp_score/fase2_features.py
+python mvp_score/fase3_modelos.py
+python mvp_score/fase4_visualizacoes.py
+```
+
+Saidas principais:
+
+```text
+mvp_score/dados/tabela_cnae_uf.csv
+mvp_score/dados/features.csv
+mvp_score/resultados/tabela_metricas.csv
+mvp_score/resultados/score_oportunidade.csv
+mvp_score/resultados/grafico_top10.png
+mvp_score/resultados/grafico_roc.png
+mvp_score/resultados/grafico_confusao.png
+mvp_score/resultados/grafico_metricas.png
 ```
 
 ---
 
-## 📈 KPIs Calculados
+## Estrutura Principal
 
-| KPI                         | Descrição                               |
-| --------------------------- | --------------------------------------- |
-| Participação por quantidade | % de contratos com MEI                  |
-| Participação por valor      | % do valor total contratado com MEI     |
-| Top UF                      | Estados com maior volume MEI            |
-| Top CNAE                    | Atividades mais contratadas             |
-| Top órgãos                  | Órgãos federais que mais compram de MEI |
-| Série temporal              | Evolução diária                         |
-
----
-
-## ⚠️ Limitações
-
-* Contratos com fornecedor PF não entram (MEI é PJ)
-* Contratos sem CNPJ válido são descartados
-* Algumas compras pequenas não passam pelo PNCP
-* Dados dependem da qualidade do preenchimento dos órgãos
-
----
-
-## 🚀 Reprodutibilidade
-
-Ordem de execução:
-
-```bash
-python import_empresas.py
-python import_estabelecimentos.py
-python import_simples.py
-python create_mei_ativo.py
-
-python pncp_mei_federal_pipeline.py
-python pncp_join_mei_federal_from_jsonl.py
-
-python plot_kpis_mei_pncp.py
+```text
+projeto_memp/
+  pncp_contratos_raw.csv
+  rf_cnpj_csv/
+    _extracted/
+      <snapshot>/
+  mvp_score/
+    fase1_preparacao.py
+    fase2_features.py
+    fase3_modelos.py
+    fase4_visualizacoes.py
+    gerar_pncp_csv.py
+    notebook_mvp_score_mei.ipynb
+    dados/
+    resultados/
 ```
 
 ---
 
-## 📌 Observação Final
+## Metodologia Resumida
 
-Este projeto foi desenhado para **escala nacional**, com centenas de milhões de registros, priorizando:
-
-* Robustez
-* Reprodutibilidade
-* Transparência metodológica
-* Visualização compreensível para público não técnico
+1. Baixa contratos do PNCP.
+2. Filtra fornecedores pessoa juridica (`tipoPessoa = PJ`).
+3. Normaliza CNPJs para 14 digitos.
+4. Carrega dados publicos da Receita Federal.
+5. Mantem apenas MEIs ativos.
+6. Cruza contratos PNCP com MEIs ativos pelo CNPJ.
+7. Agrega historico por `CNAE x UF`.
+8. Cria features historicas.
+9. Compara baseline, regressao logistica e arvore de decisao.
+10. Gera score de oportunidade e graficos finais.
 
 ---
+
+## Limitacoes
+
+- O score e historico e depende da janela baixada do PNCP.
+- Contratos sem CNPJ valido do fornecedor sao descartados.
+- Fornecedores pessoa fisica nao entram no cruzamento.
+- O resultado depende da qualidade de preenchimento no PNCP e na base CNPJ.
+- O MVP modela oportunidade por `CNAE x UF`, nao por empresa individual.

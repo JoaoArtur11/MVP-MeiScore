@@ -25,12 +25,11 @@ from typing import Optional, Dict, Any, List
 
 import duckdb
 import requests
+from project_paths import DB_PATH, PNCP_JSONL_PATH
 
 # =========================
 # CONFIG
 # =========================
-DB_PATH = Path(r"C:\Users\francisco.vieira\OneDrive - EBSERH\Dropbox\#Jobs\Projeto MEMP\cnpj_2026_01.duckdb")
-
 BASE_URL = "https://pncp.gov.br/api/consulta"
 ENDPOINT = f"{BASE_URL}/v1/contratos"
 
@@ -46,8 +45,7 @@ PAGE_SIZES = [500, 200, 100, 50, 20, 10]  # fallback se API reclamar do tamanho
 SLEEP_BETWEEN_CALLS = 0.12
 
 # saída
-OUT_DIR = Path(".")
-OUT_JSONL = OUT_DIR / "pncp_contratos_6m.jsonl"
+OUT_JSONL = PNCP_JSONL_PATH
 
 # requests
 TIMEOUT = 90

@@ -16,9 +16,9 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 import matplotlib.pyplot as plt
+from project_paths import DB_PATH, OUT_CHARTS_DIR
 
-DB_PATH = Path(r"C:\Users\francisco.vieira\OneDrive - EBSERH\Dropbox\#Jobs\Projeto MEMP\cnpj_2026_01.duckdb")
-OUT_DIR = Path(r"C:\Users\francisco.vieira\OneDrive - EBSERH\Dropbox\#Jobs\Projeto MEMP\out_charts")
+OUT_DIR = OUT_CHARTS_DIR
 
 
 def fmt_pct(x: float) -> str:
