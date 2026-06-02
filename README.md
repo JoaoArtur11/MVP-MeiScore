@@ -220,6 +220,28 @@ Os CSVs, modelos e metricas gerados localmente ficam fora do controle de versao.
 
 ---
 
+## Dashboard Interativo
+
+Depois de executar as fases 1 a 4, abra o dashboard Streamlit:
+
+```powershell
+streamlit run mvp_score/dashboard.py
+```
+
+O dashboard usa `mvp_score/resultados/score_oportunidade.csv` e permite selecionar `CNAE` e `UF` para consultar:
+
+- score de oportunidade historica estimada;
+- ranking da combinacao `CNAE x UF`;
+- quantidade historica de contratos;
+- valor medio contratado;
+- numero de orgaos compradores distintos;
+- top 10 combinacoes por score;
+- graficos demonstrativos gerados pelo pipeline.
+
+Se `score_oportunidade.csv` ainda nao existir, o dashboard mostra os comandos necessarios para gerar os dados com a amostra pequena ou com os dados reais.
+
+---
+
 ## Como Interpretar Os Graficos Demonstrativos
 
 Os PNGs em `mvp_score/resultados/` foram mantidos no repositorio como evidencia visual de uma execucao completa do MVP.
@@ -271,6 +293,7 @@ projeto_memp/
     fase2_features.py
     fase3_modelos.py
     fase4_visualizacoes.py
+    dashboard.py
     gerar_pncp_csv.py
     gerar_amostra_demo.py
     notebook_mvp_score_mei.ipynb
