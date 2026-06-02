@@ -62,6 +62,8 @@ $env:PNCP_VALIDATION_JSON='mvp_score/resultados/pncp_download_validation.json'
 python mvp_score/gerar_pncp_csv.py
 ```
 
+Aviso importante: o download completo do PNCP pode ser muito demorado, especialmente em janelas longas. O processo pode levar horas, depende da estabilidade da API e da conexao local, e interrupcoes indevidas podem deixar arquivos parciais ou inconsistentes. Use `PNCP_RESUME='1'` e `PNCP_STRICT_RESUME='1'` para retomar com mais seguranca, e evite fechar o terminal ou desligar a maquina antes da conclusao.
+
 Observacoes:
 
 - Ajuste `PNCP_DATA_INICIAL` e `PNCP_DATA_FINAL` para a janela desejada.
@@ -141,6 +143,7 @@ Observacoes:
 - A Receita publica arquivos sem cabecalho.
 - O separador e `;`.
 - Os arquivos sao grandes; reserve dezenas de GB para download e extracao.
+- O download e a extracao da base completa da Receita Federal sao processos longos. Interromper a copia, a extracao ou mover arquivos pela metade pode gerar dados incompletos e erros na Fase 1.
 - A fase 1 seleciona automaticamente o snapshot mais recente encontrado em `rf_cnpj_csv/_extracted/`.
 
 ---
