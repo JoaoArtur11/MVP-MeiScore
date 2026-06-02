@@ -6,6 +6,7 @@ import streamlit as st
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RESULTADOS_DIR = PROJECT_ROOT / 'mvp_score' / 'resultados'
+GRAFICOS_DEMO_DIR = PROJECT_ROOT / 'mvp_score' / 'graficos_demo'
 SCORE_PATH = RESULTADOS_DIR / 'score_oportunidade.csv'
 VALID_UFS = {
     'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
@@ -282,16 +283,22 @@ st.subheader('Graficos demonstrativos do pipeline')
 
 graph_cols = st.columns(4)
 graph_files = [
-    ('Top 10', RESULTADOS_DIR / 'grafico_top10.png'),
-    ('ROC', RESULTADOS_DIR / 'grafico_roc.png'),
-    ('Confusao', RESULTADOS_DIR / 'grafico_confusao.png'),
-    ('Metricas', RESULTADOS_DIR / 'grafico_metricas.png'),
+    ('Top 10', 'grafico_top10.png'),
+    ('ROC', 'grafico_roc.png'),
+    ('Confusao', 'grafico_confusao.png'),
+    ('Metricas', 'grafico_metricas.png'),
 ]
 
-for col, (title, path) in zip(graph_cols, graph_files):
+for col, (title, filename) in zip(graph_cols, graph_files):
     with col:
         st.caption(title)
-        if path.exists():
-            st.image(str(path), use_container_width=True)
+        generated_path = RESULTADOS_DIR / filename
+        demo_path = GRAFICOS_DEMO_DIR / filename
+        if generated_path.exists():
+            st.image(str(generated_path), use_container_width=True)
+            st.caption('Grafico da execucao local.')
+        elif demo_path.exists():
+            st.image(str(demo_path), use_container_width=True)
+            st.caption('Grafico demonstrativo versionado.')
         else:
             st.info('Gerado apos executar a Fase 4.')

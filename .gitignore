@@ -32,6 +32,4 @@ mvp_score/resultados/*.csv
 mvp_score/resultados/*.json
 mvp_score/resultados/*.pkl
 mvp_score/resultados/*.txt
-
-# Graficos demonstrativos versionados
-!mvp_score/resultados/grafico_*.png
+mvp_score/resultados/*.png

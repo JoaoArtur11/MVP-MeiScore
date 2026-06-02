@@ -216,7 +216,7 @@ mvp_score/resultados/grafico_confusao.png
 mvp_score/resultados/grafico_metricas.png
 ```
 
-Os CSVs, modelos e metricas gerados localmente ficam fora do controle de versao. O repositorio mantem apenas os graficos demonstrativos finais em `mvp_score/resultados/`.
+Os CSVs, modelos, metricas e graficos gerados localmente ficam fora do controle de versao. O repositorio mantem apenas graficos demonstrativos finais em `mvp_score/graficos_demo/`, para que executar o pipeline nao gere conflito no Git.
 
 ---
 
@@ -244,12 +244,14 @@ Se `score_oportunidade.csv` ainda nao existir, o dashboard mostra os comandos ne
 
 ## Como Interpretar Os Graficos Demonstrativos
 
-Os PNGs em `mvp_score/resultados/` foram mantidos no repositorio como evidencia visual de uma execucao completa do MVP.
+Os PNGs em `mvp_score/graficos_demo/` foram mantidos no repositorio como evidencia visual de uma execucao completa do MVP.
 
 - `grafico_top10.png`: mostra as 10 combinacoes `CNAE x UF` com maior score de oportunidade. Barras maiores indicam perfis com maior probabilidade historica estimada de contratacao.
 - `grafico_roc.png`: compara a curva ROC do baseline, da regressao logistica e da arvore de decisao. Quanto maior a AUC, melhor o modelo separa combinacoes de maior e menor oportunidade.
 - `grafico_confusao.png`: mostra acertos e erros de classificacao dos modelos supervisionados no conjunto de teste. A diagonal principal representa classificacoes corretas.
 - `grafico_metricas.png`: renderiza a tabela comparativa de metricas (`F1`, `AUC-ROC`, `Precisao` e `Recall`) para facilitar apresentacao do MVP.
+
+Ao executar a Fase 4, novos PNGs sao gerados localmente em `mvp_score/resultados/`. Eles sao ignorados pelo Git. O dashboard mostra os graficos da execucao local quando eles existem; caso contrario, mostra os graficos demonstrativos versionados.
 
 O arquivo `score_oportunidade.csv`, gerado localmente, e a saida operacional principal: ele ordena cada combinacao `CNAE x UF` por `score` de 0 a 100 e `ranking`.
 
@@ -298,6 +300,7 @@ projeto_memp/
     gerar_pncp_csv.py
     gerar_amostra_demo.py
     notebook_mvp_score_mei.ipynb
+    graficos_demo/
     resultados/
 ```
 
