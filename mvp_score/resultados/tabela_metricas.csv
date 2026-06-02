@@ -1,4 +1,0 @@
-modelo,F1,AUC-ROC,Precisão,Recall
-Baseline,0.6447761194029851,1.0,0.47577092511013214,1.0
-Regressão Logística,1.0,1.0,1.0,1.0
-Árvore de Decisão,1.0,1.0,1.0,1.0

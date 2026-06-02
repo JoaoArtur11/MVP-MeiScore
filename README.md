@@ -8,7 +8,9 @@ O pipeline cruza:
 - dados cadastrais publicos de CNPJ/MEI da Receita Federal;
 - agregacoes historicas por CNAE, UF, valor contratado, orgaos compradores e MEIs contratados.
 
-O resultado principal e o arquivo `mvp_score/resultados/score_oportunidade.csv`, com score de 0 a 100 para cada combinacao `CNAE x UF`.
+O resultado principal, gerado ao executar o pipeline, e o arquivo `mvp_score/resultados/score_oportunidade.csv`, com score de 0 a 100 para cada combinacao `CNAE x UF`.
+
+Os dados brutos nao sao versionados no repositorio. O README descreve como baixa-los novamente a partir das fontes publicas.
 
 ---
 
@@ -186,6 +188,12 @@ Target:
 
 ## Como Executar O MVP
 
+Instale as dependencias:
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
 Depois de obter os dados brutos:
 
 ```powershell
@@ -208,6 +216,8 @@ mvp_score/resultados/grafico_confusao.png
 mvp_score/resultados/grafico_metricas.png
 ```
 
+Os CSVs, modelos e metricas gerados localmente ficam fora do controle de versao. O repositorio mantem apenas os graficos demonstrativos finais em `mvp_score/resultados/`.
+
 ---
 
 ## Estrutura Principal
@@ -225,7 +235,6 @@ projeto_memp/
     fase4_visualizacoes.py
     gerar_pncp_csv.py
     notebook_mvp_score_mei.ipynb
-    dados/
     resultados/
 ```
 

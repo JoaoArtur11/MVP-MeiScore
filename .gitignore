@@ -4,6 +4,7 @@ rf_cnpj_csv/
 pncp_contratos_raw.csv
 pncp_contratos_raw_backup.csv
 mvp_score/pncp_contratos_raw.csv
+mvp_score/dados/
 
 # Arquivos temporarios de download/extracao
 *.part
@@ -19,7 +20,17 @@ __pycache__/
 
 # Residuos de execucao local do PNCP
 mvp_score/mvp_score/
+mvp_score/inspecao_passo0.txt
 mvp_score/resultados/pncp_full_run*.log
 mvp_score/resultados/pncp_download_state.json
 mvp_score/resultados/pncp_download_validation*.json
 mvp_score/resultados/failed_pages*.csv
+
+# Artefatos gerados ao executar o MVP
+mvp_score/resultados/*.csv
+mvp_score/resultados/*.json
+mvp_score/resultados/*.pkl
+mvp_score/resultados/*.txt
+
+# Graficos demonstrativos versionados
+!mvp_score/resultados/grafico_*.png
