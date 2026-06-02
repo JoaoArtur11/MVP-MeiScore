@@ -220,6 +220,31 @@ Os CSVs, modelos e metricas gerados localmente ficam fora do controle de versao.
 
 ---
 
+## Modo De Amostra Pequena
+
+Para testar o MVP sem baixar dezenas de GB da Receita Federal, use o gerador de amostra:
+
+```powershell
+python mvp_score/gerar_amostra_demo.py
+$env:MVP_BASE_DIR='amostra_dados'
+python mvp_score/fase1_preparacao.py
+python mvp_score/fase2_features.py
+python mvp_score/fase3_modelos.py
+python mvp_score/fase4_visualizacoes.py
+Remove-Item Env:\MVP_BASE_DIR
+```
+
+O que esse modo faz:
+
+- baixa uma amostra real pequena de contratos PNCP pela API oficial;
+- grava `amostra_dados/pncp_contratos_raw.csv`;
+- cria um fixture minimo da Receita Federal em `amostra_dados/rf_cnpj_csv/_extracted/demo-sintetico/`;
+- executa o mesmo pipeline das fases 1 a 4 apontando `MVP_BASE_DIR` para a pasta de amostra.
+
+Limite importante: a Receita Federal nao disponibiliza uma API oficial de amostra pequena da base CNPJ. Ela publica arquivos ZIP completos por bloco. Por isso, no modo de amostra, a parte PNCP e real e a parte Receita e um fixture sintetico no mesmo layout dos arquivos publicos, usado apenas para demonstrar que o pipeline executa de ponta a ponta. Para o experimento real, baixe `Empresas*.zip`, `Estabelecimentos*.zip` e `Simples.zip` conforme a secao de fontes de dados.
+
+---
+
 ## Estrutura Principal
 
 ```text
@@ -234,6 +259,7 @@ projeto_memp/
     fase3_modelos.py
     fase4_visualizacoes.py
     gerar_pncp_csv.py
+    gerar_amostra_demo.py
     notebook_mvp_score_mei.ipynb
     resultados/
 ```

@@ -37,18 +37,18 @@ CHUNK_SIZE = int(os.environ.get('MVP_RFB_CHUNK_SIZE', '200000'))
 #    niFornecedor, tipoPessoa, valorGlobal, dataPublicacaoPncp, orgaoEntidade_razaoSocial.
 
 
-def run_passo0_inspecao(output_path: Path) -> None:
+def run_passo0_inspecao(output_path: Path, scan_dir: Path = Path('.')) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     lines = []
 
-    for root, dirs, files in os.walk('.'):
+    for root, dirs, files in os.walk(scan_dir):
         dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ('venv', 'env', '__pycache__', 'node_modules')]
         for file in files:
             filepath = os.path.join(root, file)
             size_mb = os.path.getsize(filepath) / (1024 * 1024)
             lines.append(f"{filepath}  ({size_mb:.1f} MB)")
 
-    for csv_path in glob.glob('./**/*.csv', recursive=True):
+    for csv_path in glob.glob(str(scan_dir / '**' / '*.csv'), recursive=True):
         try:
             df = pd.read_csv(csv_path, nrows=3, sep=None, engine='python', encoding='utf-8')
             enc_used = 'utf-8'
@@ -274,12 +274,12 @@ def build_mei_ativo_pandas(mei_files: dict, pncp_basicos: list[str]) -> pd.DataF
 
 
 def phase1_main():
-    base_dir = Path('.')
+    base_dir = Path(os.environ.get('MVP_BASE_DIR', '.'))
     os.makedirs('mvp_score', exist_ok=True)
     os.makedirs('mvp_score/dados', exist_ok=True)
     os.makedirs('mvp_score/resultados', exist_ok=True)
 
-    run_passo0_inspecao(Path('mvp_score/inspecao_passo0.txt'))
+    run_passo0_inspecao(Path('mvp_score/inspecao_passo0.txt'), base_dir)
 
     mei_files = discover_mei_files(base_dir)
     print(f"Snapshot MEI identificado: {mei_files['snapshot']}")

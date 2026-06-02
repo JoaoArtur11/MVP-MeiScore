@@ -1,6 +1,7 @@
 # Dados brutos grandes baixados localmente
 dados cnae/
 rf_cnpj_csv/
+amostra_dados/
 pncp_contratos_raw.csv
 pncp_contratos_raw_backup.csv
 mvp_score/pncp_contratos_raw.csv
