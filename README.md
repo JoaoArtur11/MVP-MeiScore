@@ -155,13 +155,13 @@ mvp_score/dados/tabela_cnae_uf.csv
 
 Colunas:
 
-- `CNAE`
-- `UF`
-- `count_contratos`
-- `valor_total`
-- `valor_medio`
-- `n_orgaos`
-- `n_meis`
+- `CNAE`: atividade economica principal do MEI, conforme cadastro da Receita Federal.
+- `UF`: estado do estabelecimento MEI.
+- `count_contratos`: quantidade de contratos PNCP encontrados para MEIs daquele `CNAE x UF`.
+- `valor_total`: soma do valor global contratado naquela combinacao.
+- `valor_medio`: valor medio dos contratos daquela combinacao.
+- `n_orgaos`: quantidade de orgaos compradores distintos.
+- `n_meis`: quantidade de MEIs distintos contratados.
 
 A fase 2 cria:
 
@@ -171,13 +171,13 @@ mvp_score/dados/features.csv
 
 Features:
 
-- `share_cnae`
-- `share_uf`
-- `log_valor_medio`
-- `log_valor_total`
-- `log_count`
-- `diversidade_orgaos`
-- `densidade_mei`
+- `share_cnae`: participacao do CNAE no total historico de contratos.
+- `share_uf`: participacao da UF no total historico de contratos.
+- `log_valor_medio`: transformacao logaritmica do valor medio para reduzir efeito de outliers.
+- `log_valor_total`: transformacao logaritmica do valor total contratado.
+- `log_count`: transformacao logaritmica da quantidade de contratos.
+- `diversidade_orgaos`: diversidade normalizada de orgaos compradores.
+- `densidade_mei`: razao entre MEIs distintos contratados e quantidade de contratos.
 
 Target:
 
@@ -217,6 +217,19 @@ mvp_score/resultados/grafico_metricas.png
 ```
 
 Os CSVs, modelos e metricas gerados localmente ficam fora do controle de versao. O repositorio mantem apenas os graficos demonstrativos finais em `mvp_score/resultados/`.
+
+---
+
+## Como Interpretar Os Graficos Demonstrativos
+
+Os PNGs em `mvp_score/resultados/` foram mantidos no repositorio como evidencia visual de uma execucao completa do MVP.
+
+- `grafico_top10.png`: mostra as 10 combinacoes `CNAE x UF` com maior score de oportunidade. Barras maiores indicam perfis com maior probabilidade historica estimada de contratacao.
+- `grafico_roc.png`: compara a curva ROC do baseline, da regressao logistica e da arvore de decisao. Quanto maior a AUC, melhor o modelo separa combinacoes de maior e menor oportunidade.
+- `grafico_confusao.png`: mostra acertos e erros de classificacao dos modelos supervisionados no conjunto de teste. A diagonal principal representa classificacoes corretas.
+- `grafico_metricas.png`: renderiza a tabela comparativa de metricas (`F1`, `AUC-ROC`, `Precisao` e `Recall`) para facilitar apresentacao do MVP.
+
+O arquivo `score_oportunidade.csv`, gerado localmente, e a saida operacional principal: ele ordena cada combinacao `CNAE x UF` por `score` de 0 a 100 e `ranking`.
 
 ---
 
