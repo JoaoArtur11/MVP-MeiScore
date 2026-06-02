@@ -12,6 +12,20 @@ VALID_UFS = {
     'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI',
     'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
 }
+CNAE_DESCRICOES = {
+    '4321500': 'Instalacao e manutencao eletrica',
+    '4399103': 'Obras de alvenaria',
+    '4520005': 'Servicos de lavagem, lubrificacao e polimento de veiculos',
+    '4541206': 'Comercio de pecas e acessorios para motocicletas',
+    '4712100': 'Comercio varejista de mercadorias em geral',
+    '5611203': 'Lanchonetes, casas de cha, sucos e similares',
+    '7319002': 'Promocao de vendas',
+    '7420001': 'Atividades de producao de fotografias',
+    '7729202': 'Aluguel de moveis, utensilios e aparelhos de uso domestico e pessoal',
+    '8230001': 'Servicos de organizacao de feiras, congressos e exposicoes',
+    '9001902': 'Producao musical',
+    '9511800': 'Reparacao e manutencao de computadores e perifericos',
+}
 
 
 st.set_page_config(
@@ -79,6 +93,8 @@ def normalize_score_df(df: pd.DataFrame) -> pd.DataFrame:
     df['count_contratos'] = pd.to_numeric(df['count_contratos'], errors='coerce').fillna(0).astype(int)
     df['valor_medio'] = pd.to_numeric(df['valor_medio'], errors='coerce').fillna(0.0)
     df['n_orgaos'] = pd.to_numeric(df['n_orgaos'], errors='coerce').fillna(0).astype(int)
+    df['descricao_cnae'] = df['CNAE'].map(CNAE_DESCRICOES).fillna('Descricao nao cadastrada')
+    df['CNAE_legenda'] = df['CNAE'] + ' - ' + df['descricao_cnae']
     return df.sort_values(['ranking', 'score'], ascending=[True, False]).reset_index(drop=True)
 
 
@@ -98,6 +114,10 @@ def score_band(score: float) -> tuple[str, str]:
     if score >= 50:
         return 'Oportunidade intermediaria', 'Perfil com algum sinal historico, mas abaixo dos lideres.'
     return 'Baixa oportunidade historica', 'Perfil com pouco sinal historico na janela analisada.'
+
+
+def cnae_label(cnae: str) -> str:
+    return f'{cnae} - {CNAE_DESCRICOES.get(str(cnae), "Descricao nao cadastrada")}'
 
 
 def show_missing_data_state() -> None:
@@ -184,7 +204,7 @@ with left:
 
     cnae_base = df if selected_uf == 'Todas' else df[df['UF'] == selected_uf]
     cnae_options = sorted(cnae_base['CNAE'].dropna().unique().tolist())
-    selected_cnae = st.selectbox('CNAE', cnae_options)
+    selected_cnae = st.selectbox('CNAE', cnae_options, format_func=cnae_label)
 
     rows = cnae_base[cnae_base['CNAE'] == selected_cnae].copy()
     if selected_uf == 'Todas':
@@ -212,6 +232,8 @@ with left:
 
 with right:
     st.subheader('Resultado para o perfil selecionado')
+    st.markdown(f"**CNAE:** `{selected['CNAE']}` - {selected['descricao_cnae']}")
+    st.markdown(f"**UF:** `{selected['UF']}`")
     m1, m2, m3, m4 = st.columns(4)
     m1.metric('Score', f'{float(selected["score"]):.1f}/100')
     m2.metric('Ranking', f'{int(selected["ranking"])}')
@@ -230,7 +252,7 @@ with right:
 st.divider()
 
 top10 = df.sort_values(['score', 'ranking'], ascending=[False, True]).head(10).copy()
-top10['CNAE x UF'] = top10['CNAE'] + ' | ' + top10['UF']
+top10['CNAE x UF'] = top10['CNAE_legenda'] + ' | ' + top10['UF']
 
 chart_col, table_col = st.columns([0.58, 0.42], gap='large')
 
@@ -241,10 +263,19 @@ with chart_col:
 with table_col:
     st.subheader('Tabela resumida')
     st.dataframe(
-        top10[['ranking', 'CNAE', 'UF', 'score', 'count_contratos', 'valor_medio', 'n_orgaos']],
+        top10[['ranking', 'CNAE', 'descricao_cnae', 'UF', 'score', 'count_contratos', 'valor_medio', 'n_orgaos']],
         hide_index=True,
         use_container_width=True,
     )
+
+with st.expander('Legenda de CNAEs presentes no resultado'):
+    legenda = (
+        df[['CNAE', 'descricao_cnae']]
+        .drop_duplicates()
+        .sort_values('CNAE')
+        .reset_index(drop=True)
+    )
+    st.dataframe(legenda, hide_index=True, use_container_width=True)
 
 st.divider()
 st.subheader('Graficos demonstrativos do pipeline')
