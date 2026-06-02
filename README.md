@@ -274,6 +274,7 @@ O que esse modo faz:
 - baixa uma amostra real pequena de contratos PNCP pela API oficial;
 - grava `amostra_dados/pncp_contratos_raw.csv`;
 - cria um fixture minimo da Receita Federal em `amostra_dados/rf_cnpj_csv/_extracted/demo-sintetico/`;
+- distribui CNAEs e UFs no fixture para gerar varias combinacoes demonstrativas no dashboard;
 - executa o mesmo pipeline das fases 1 a 4 apontando `MVP_BASE_DIR` para a pasta de amostra.
 
 Limite importante: a Receita Federal nao disponibiliza uma API oficial de amostra pequena da base CNPJ. Ela publica arquivos ZIP completos por bloco. Por isso, no modo de amostra, a parte PNCP e real e a parte Receita e um fixture sintetico no mesmo layout dos arquivos publicos, usado apenas para demonstrar que o pipeline executa de ponta a ponta. Para o experimento real, baixe `Empresas*.zip`, `Estabelecimentos*.zip` e `Simples.zip` conforme a secao de fontes de dados.

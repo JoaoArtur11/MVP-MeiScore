@@ -38,6 +38,7 @@ CNAES_DEMO = [
     '8230001', '4399103', '7420001', '5611203', '9511800',
 ]
 UFS_DEMO = ['SP', 'SC', 'GO', 'BA', 'PR', 'MG', 'RS', 'CE', 'PA', 'MT']
+UFS_POR_CONTRATO_DEMO = max(1, int(os.environ.get('MVP_SAMPLE_UF_REPEAT', '5')))
 
 
 def digits_only(value: object) -> str:
@@ -155,8 +156,9 @@ def escrever_fixture_rfb(rows: list[dict]) -> dict:
 
         for idx, cnpj in enumerate(cnpjs):
             basico, ordem, dv = cnpj[:8], cnpj[8:12], cnpj[12:14]
-            cnae = CNAES_DEMO[idx % len(CNAES_DEMO)]
-            uf = UFS_DEMO[idx % len(UFS_DEMO)]
+            uf = UFS_DEMO[(idx // UFS_POR_CONTRATO_DEMO) % len(UFS_DEMO)]
+            cnae_shift = (idx // (UFS_POR_CONTRATO_DEMO * len(UFS_DEMO))) % len(CNAES_DEMO)
+            cnae = CNAES_DEMO[(idx + cnae_shift) % len(CNAES_DEMO)]
 
             emp_writer.writerow([basico, f'MEI DEMO {idx + 1}', '', '', '', '', ''])
 
@@ -177,6 +179,12 @@ def escrever_fixture_rfb(rows: list[dict]) -> dict:
         'estabelecimentos': str(estabele_path),
         'simples': str(simples_path),
         'cnpjs_fixture': len(cnpjs),
+        'ufs_demo': UFS_DEMO,
+        'cnaes_demo': CNAES_DEMO,
+        'observacao_distribuicao': (
+            'O fixture distribui CNPJs em ciclos de UF e CNAE para gerar mais '
+            'combinacoes CNAE x UF no dashboard de demonstracao.'
+        ),
         'observacao': (
             'PNCP real baixado da API oficial; fixture RFB sintetico no layout '
             'Receita porque a fonte oficial so publica arquivos completos grandes.'
